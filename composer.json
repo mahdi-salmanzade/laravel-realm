@@ -1,0 +1,52 @@
+{
+    "name": "mahdisphp/laravel-realm",
+    "description": "Multi-tenancy for Laravel. Safe by default.",
+    "keywords": ["laravel", "multi-tenancy", "tenancy", "realm", "saas"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mahdi S",
+            "email": "mahdi@mahdisphp.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/http": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/log": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "phpunit/phpunit": "^11.0|^12.0",
+        "laravel/pint": "^1.0",
+        "phpstan/phpstan": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Realm\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Realm\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Realm\\RealmServiceProvider"
+            ],
+            "aliases": {
+                "Realm": "Realm\\Facades\\Realm"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
