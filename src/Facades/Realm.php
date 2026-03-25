@@ -13,6 +13,10 @@ use Realm\RealmManager;
  * @method static bool isTenancyDisabled()
  * @method static mixed run(string|\Realm\Models\Tenant $tenant, \Closure $callback)
  * @method static mixed withoutTenancy(\Closure $callback)
+ * @method static void forget()
+ * @method static string|null getSecret(string|\Realm\Models\Tenant $tenant, string $key)
+ * @method static void setSecret(string|\Realm\Models\Tenant $tenant, string $key, string $value)
+ * @method static bool deleteSecret(string|\Realm\Models\Tenant $tenant, string $key)
  *
  * @see RealmManager
  */

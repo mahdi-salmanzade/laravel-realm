@@ -44,6 +44,8 @@ class CommandsTest extends TestCase
         Tenant::create(['key' => 'globex', 'name' => 'Globex Inc']);
 
         $this->artisan('realm:list')
+            ->expectsOutputToContain('acme')
+            ->expectsOutputToContain('globex')
             ->assertSuccessful();
 
         $this->assertDatabaseHas('tenants', ['key' => 'acme']);

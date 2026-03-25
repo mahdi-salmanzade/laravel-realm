@@ -45,6 +45,8 @@ class MiddlewareTest extends TestCase
         $app['config']->set('realm.resolvers', [
             HeaderResolver::class,
         ]);
+        // Clear central domains so localhost doesn't trigger the guard
+        $app['config']->set('realm.central_domains', []);
     }
 
     public function test_resolve_realm_sets_context_for_valid_tenant(): void

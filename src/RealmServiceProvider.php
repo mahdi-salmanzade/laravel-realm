@@ -7,12 +7,18 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Octane\Events\RequestReceived;
 use Realm\Console\RealmCheckCommand;
 use Realm\Console\RealmCreateCommand;
+use Realm\Console\RealmDeleteCommand;
+use Realm\Console\RealmExecCommand;
 use Realm\Console\RealmInstallCommand;
 use Realm\Console\RealmListCommand;
+use Realm\Console\RealmRunForEachCommand;
 use Realm\Console\RealmTestCommand;
 use Realm\Context\RealmContext;
 use Realm\Http\Middleware\EnsureCentralRoute;
 use Realm\Http\Middleware\ResolveRealm;
+use Realm\Integrations\RealmCacheManager;
+use Realm\Integrations\RealmConfigManager;
+use Realm\Integrations\RealmStorageManager;
 use Realm\Listeners\ResetRealmContext;
 use Realm\Strategies\ColumnStrategy;
 use Realm\Strategies\TenancyStrategyInterface;
@@ -27,14 +33,24 @@ class RealmServiceProvider extends ServiceProvider
         $this->app->singleton(RealmContext::class);
 
         $this->app->singleton(TenancyStrategyInterface::class, function () {
-            return match (config('realm.strategy', 'column')) {
-                default => new ColumnStrategy,
+            $strategy = config('realm.strategy', 'column');
+
+            return match ($strategy) {
+                'column' => new ColumnStrategy,
+                default => throw new \InvalidArgumentException(
+                    "Unknown realm strategy '{$strategy}'. Supported strategies: 'column'."
+                ),
             };
         });
 
         $this->app->singleton(RealmManager::class, function ($app) {
             return new RealmManager($app->make(RealmContext::class));
         });
+
+        $this->app->singleton(RealmConfigManager::class);
+
+        $this->registerCacheIntegration();
+        $this->registerStorageIntegration();
     }
 
     public function boot(): void
@@ -44,6 +60,27 @@ class RealmServiceProvider extends ServiceProvider
         $this->registerBlueprintMacro();
         $this->registerRouteMacros();
         $this->registerOctaneListener();
+    }
+
+    private function registerCacheIntegration(): void
+    {
+        if (config('realm.cache.prefix', true)) {
+            $this->app->singleton('cache', function ($app) {
+                return new RealmCacheManager($app);
+            });
+        }
+    }
+
+    private function registerStorageIntegration(): void
+    {
+        if (config('realm.storage.prefix_path', true)) {
+            $this->app->extend('filesystem.disk', function ($disk, $app) {
+                return new RealmStorageManager(
+                    $disk,
+                    $app->make(RealmContext::class),
+                );
+            });
+        }
     }
 
     private function registerPublishing(): void
@@ -70,6 +107,9 @@ class RealmServiceProvider extends ServiceProvider
                 RealmListCommand::class,
                 RealmCheckCommand::class,
                 RealmTestCommand::class,
+                RealmDeleteCommand::class,
+                RealmExecCommand::class,
+                RealmRunForEachCommand::class,
             ]);
         }
     }

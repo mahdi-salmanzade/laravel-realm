@@ -8,6 +8,7 @@ use Realm\Context\RealmContext;
 use Realm\Events\RealmIdentified;
 use Realm\Events\RealmNotFound;
 use Realm\Exceptions\RealmNotFoundException;
+use Realm\Integrations\RealmConfigManager;
 use Realm\Models\Tenant;
 use Realm\Resolution\RealmResolverPipeline;
 use Realm\Strategies\TenancyStrategyInterface;
@@ -15,6 +16,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResolveRealm
 {
+    private bool $configApplied = false;
+
     public function __construct(
         private readonly RealmResolverPipeline $resolver,
         private readonly RealmContext $context,
@@ -22,6 +25,13 @@ class ResolveRealm
 
     public function handle(Request $request, Closure $next): Response
     {
+        $centralDomains = config('realm.central_domains', []);
+        if (in_array($request->getHost(), $centralDomains, true)) {
+            RealmNotFound::dispatch(null);
+
+            return $this->handleFailure(null);
+        }
+
         $realmKey = $this->resolver->resolve($request);
 
         if (! $realmKey) {
@@ -40,6 +50,8 @@ class ResolveRealm
 
         $this->context->set($tenant);
         app(TenancyStrategyInterface::class)->switch($tenant);
+        app(RealmConfigManager::class)->apply($tenant);
+        $this->configApplied = true;
 
         RealmIdentified::dispatch($tenant);
 
@@ -48,6 +60,9 @@ class ResolveRealm
 
     public function terminate(Request $request, Response $response): void
     {
+        if ($this->configApplied) {
+            app(RealmConfigManager::class)->restore();
+        }
         app(TenancyStrategyInterface::class)->disconnect();
         $this->context->reset();
     }

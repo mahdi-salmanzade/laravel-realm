@@ -2,13 +2,17 @@
 
 namespace Realm\Tests\Unit;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Realm\Context\RealmContext;
 use Realm\Models\Tenant;
 use Realm\Scopes\RealmScope;
+use Realm\Testing\RealmTestHelpers;
 use Realm\Tests\TestCase;
 
 class RealmContextTest extends TestCase
 {
+    use RealmTestHelpers;
+
     private RealmContext $context;
 
     protected function setUp(): void
@@ -198,5 +202,28 @@ class RealmContextTest extends TestCase
     {
         $result = $this->context->withoutTenancy(fn () => 'hello');
         $this->assertEquals('hello', $result);
+    }
+
+    public function test_forget_clears_tenant_without_clearing_tenancy_disabled(): void
+    {
+        $tenant = $this->createRealm('acme');
+        $context = app(RealmContext::class);
+
+        $context->set($tenant);
+        $context->withoutTenancy(function () use ($context) {
+            $this->assertTrue($context->isTenancyDisabled());
+            $context->forget();
+            $this->assertNull($context->get());
+            $this->assertTrue($context->isTenancyDisabled()); // NOT cleared
+        });
+    }
+
+    public function test_run_rejects_inactive_tenant_by_key(): void
+    {
+        $this->createRealm('acme', ['active' => false]);
+        $context = app(RealmContext::class);
+
+        $this->expectException(ModelNotFoundException::class);
+        $context->run('acme', fn () => null);
     }
 }
