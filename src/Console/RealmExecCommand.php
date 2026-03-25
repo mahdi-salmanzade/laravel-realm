@@ -8,7 +8,7 @@ use Realm\Models\Tenant;
 
 class RealmExecCommand extends Command
 {
-    protected $signature = 'realm:exec {key} {command}';
+    protected $signature = 'realm:exec {key} {artisan_command}';
 
     protected $description = 'Run an artisan command in the context of a specific tenant';
 
@@ -29,7 +29,7 @@ class RealmExecCommand extends Command
             return self::FAILURE;
         }
 
-        $command = $this->argument('command');
+        $command = $this->argument('artisan_command');
 
         $this->info("Running '{$command}' for tenant '{$tenant->key}'...");
 

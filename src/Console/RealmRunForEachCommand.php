@@ -8,13 +8,13 @@ use Realm\Models\Tenant;
 
 class RealmRunForEachCommand extends Command
 {
-    protected $signature = 'realm:run-for-each {command} {--only=* : Only run for specific tenant keys} {--except=* : Skip specific tenant keys}';
+    protected $signature = 'realm:run-for-each {artisan_command} {--only=* : Only run for specific tenant keys} {--except=* : Skip specific tenant keys}';
 
     protected $description = 'Run an artisan command for each active tenant';
 
     public function handle(): int
     {
-        $command = $this->argument('command');
+        $command = $this->argument('artisan_command');
         $only = $this->option('only');
         $except = $this->option('except');
 
